@@ -1,0 +1,17 @@
+filename = 'profile.json'
+    with open(filename, 'r+') as profileData:
+        posList = {'Positions': []}
+
+        while(True):
+        
+            confirmInput = pyautogui.confirm('Position your mouse and press ENTER, press ESC to cancel.') 
+            if(confirmInput == 'OK'):
+                currentMouseX, currentMouseY = pyautogui.position() 
+                posList['Positions'].append({'xPos': currentMouseX, 'yPos': currentMouseY})
+            else:
+                profileName = pyautogui.prompt('Profile Name: ') 
+                data = json.load(profileData)
+                data["Profiles"].append({'profileName': profileName, 'posList':[posList]})
+                profileData.seek(0)
+                json.dump(data, profileData)
+                return False
