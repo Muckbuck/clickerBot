@@ -5,46 +5,68 @@ import ast
 from msvcrt import getch
 import msvcrt
 import time
+import cv2
+import pyHook
+import pythoncom
 
 screenWidth, screenHeight = pyautogui.size() 
-
 
 def mouse(x, y):
     pyautogui.moveTo(300, 200)
 
 def storeProfile():
-
-    import pyHook
-    import pythoncom
-    profileName = pyautogui.prompt('Profile Name: ') 
     posList = {'Positions': []}
-    def onclick(event):
-        mouseClickPos =  str(event.Position)
-        mouseClickPos.split(',')
-        mouseClickPos0 = str(mouseClickPos[0])
-        mouseClickPos1 = str(mouseClickPos[1])
-        x = mouseClickPos0.translate(None, '(')
-        y = mouseClickPos1.translate(None, ')')
-        posList['Positions'].append({'xPos': x, 'yPos': x})
-        return True
+    
+    profileName = pyautogui.prompt('Profile Name: ') 
+    while True:  
+        
+        if msvcrt.kbhit() and ord(msvcrt.getch()) == 13:
+            break     
 
-    filename = 'profile.json'
-    with open(filename, 'r+') as profileData:
+                
+                
+    while True:
+        print('Recording process started')
+
+        def onclick(event):
+            mouseClickPos =  str(event.Position)
+            mouseClickList = mouseClickPos.split(',')
+            mouseClickPos0 = mouseClickList[0]
+            mouseClickPos1 = mouseClickList[1]
+            mouseClickPos0String = str(mouseClickPos0)
+            mouseClickPos1String = str(mouseClickPos1)
+            x = mouseClickPos0.translate(None, '(')
+            y = mouseClickPos1.translate(None, ')')
+            posList['Positions'].append({'xPos': x, 'yPos': y})
+            print x
+            print y
+            print posList
+
+            return True
+
+        hm = pyHook.HookManager()
+        hm.SubscribeMouseAllButtonsDown(onclick)
+        hm.HookMouse()
+        pythoncom.PumpMessages()
+        hm.UnhookMouse()
                         
-        data = json.load(profileData)
-        data["Profiles"].append({'profileName': profileName, 'posList':[posList]})
-        profileData.seek(0)
-        json.dump(data, profileData)
+        if msvcrt.kbhit() and ord(msvcrt.getch()) == 27:
+                
+            filename = 'profile.json'
+            with open(filename, 'r+') as profileData:
+                                            
+                data = json.load(profileData)
+                data["Profiles"].append({'profileName': profileName, 'posList':[posList]})
+                profileData.seek(0)
+                json.dump(data, profileData)
+                return False
+        else:
+            continue
+        
         
 
-    hm = pyHook.HookManager()
-    hm.SubscribeMouseAllButtonsDown(onclick)
-    hm.HookMouse()
-    pythoncom.PumpMessages()
-    hm.UnhookMouse()
-
     
-            
+
 
 def getProfile():
     filename = 'profile.json'
