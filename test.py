@@ -8,26 +8,20 @@ import time
 import cv2
 import pyHook
 import pythoncom
+import threading
 
 screenWidth, screenHeight = pyautogui.size() 
+posList = {'Positions': []}
+profileName = None
 
-def mouse(x, y):
-    pyautogui.moveTo(300, 200)
-
-def storeProfile():
-    posList = {'Positions': []}
+def startRecording():
+    global profileName
     
     profileName = pyautogui.prompt('Profile Name: ') 
-    while True:  
-        
-        if msvcrt.kbhit() and ord(msvcrt.getch()) == 13:
-            break     
-
-                
-                
-    while True:
-        print('Recording process started')
-
+    print('Recording process started.')
+    global posList 
+    recordingThread = threading.currentThread()
+    while getattr(recordingThread, "do_run", True):
         def onclick(event):
             mouseClickPos =  str(event.Position)
             mouseClickList = mouseClickPos.split(',')
@@ -48,20 +42,46 @@ def storeProfile():
         hm.SubscribeMouseAllButtonsDown(onclick)
         hm.HookMouse()
         pythoncom.PumpMessages()
-        hm.UnhookMouse()
+        hm.UnhookMouse()    
+    
+
+def dumpRecording():
+    global posList 
+
+
+                    
+    filename = 'profile.json'
+    with open(filename, 'r+') as profileData:
+                                                
+        data = json.load(profileData)
+        data["Profiles"].append({'profileName': profileName, 'posList':[posList]})
+        profileData.seek(0)
+        json.dump(data, profileData)
+    menu()  
                         
-        if msvcrt.kbhit() and ord(msvcrt.getch()) == 27:
-                
-            filename = 'profile.json'
-            with open(filename, 'r+') as profileData:
-                                            
-                data = json.load(profileData)
-                data["Profiles"].append({'profileName': profileName, 'posList':[posList]})
-                profileData.seek(0)
-                json.dump(data, profileData)
-                return False
-        else:
-            continue
+  
+
+def storeProfile():
+    
+    
+    
+    
+    print 'Press enter to start recording.'
+    while True:
+        if msvcrt.kbhit() and ord(msvcrt.getch()) == 13:
+            pill2kill = threading.Event()
+            recordingThread = threading.Thread(target=startRecording)    
+            
+            recordingThread.start()   
+            
+        elif msvcrt.kbhit() and ord(msvcrt.getch()) == 27:
+            dumpRecording()
+            recordingThread.do_run = False
+            recordingThread.join()
+            
+            
+          
+            
         
         
 
